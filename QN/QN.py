@@ -28,6 +28,7 @@ class QNAgent:
         self.update_target_model()
         self.step_count_total = 1
         self.target_update = UPDATE_STEP
+        self.is_double = True
 
     def _huber_loss(self, target, prediction):
         # sqrt(1+error^2)-1
@@ -48,7 +49,6 @@ class QNAgent:
         # copy weights from model to target_model
         self.target_model.set_weights(self.model.get_weights())
 
-
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
@@ -62,10 +62,15 @@ class QNAgent:
             target = self.model.predict(state)
             if done:
                 target[0][action] = reward
-            else:
+            else: 
+                if self.is_double:
+                    a = np.argmax(self.model.predict(next_state)[0])
+                    t = self.target_model.predict(next_state)[0]
+                    target[0][action] = reward + self.gamma * t[a]
+                else:
+                    t = self.target_model.predict(next_state)[0]
+                    target[0][action] = reward + self.gamma * np.amax(t)
 
-                t = self.target_model.predict(next_state)[0]
-                target[0][action] = reward + self.gamma * np.amax(t)
  
             self.model.fit(state, target, epochs=1, verbose=0)
         ## update target model
@@ -82,9 +87,12 @@ class QNAgent:
         self.model.save_weights(name)
 
 
-def act(env, agents, states, epsilon, i_episode):
+def act(env, agents, states, epsilon, i_episode, consider_energy):
         if np.random.rand() <= epsilon:
             random_action = random.randrange(env.nA)
+            if consider_energy:
+                return ([random_action, random_action, random_action],
+                [random_action, random_action, random_action])
             return random_action, [random_action, random_action, random_action]
         i = 0
         act_values = []  
@@ -94,17 +102,22 @@ def act(env, agents, states, epsilon, i_episode):
             action_value = agent.predict(state)[0]
             act_values.append(action_value)
             best_action.append(np.argmax(action_value))
-            # if(i_episode%100 == 0):
+            # if((i_episode)%100 == 0):
             #     print("agent" + str(i))
             #     print(action_value) 
             i = i + 1
         act_values = np.array(act_values)
         # get averaged Q - value
         act_values = np.average(act_values, axis=0)
+       
+        if consider_energy:
+            # get idex of positive value 
+            top_act_values = act_values.argsort()[-3:][::-1]
+            return (top_act_values, best_action)
         return np.argmax(act_values), best_action   # returns action
 
 
-def q_learning(env, agents, num_episodes, batch_size, epsilon, epsilon_min, epsilon_decay, folder):
+def q_learning(env, env_evaluation, agents, num_episodes, batch_size, epsilon, epsilon_min, epsilon_decay, consider_energy, folder):
     """
     Q-Learning algorithm for fff-policy TD control using Function Approximation.
     Finds the optimal greedy policy while following an epsilon-greedy policy.
@@ -127,7 +140,7 @@ def q_learning(env, agents, num_episodes, batch_size, epsilon, epsilon_min, epsi
 
 
     for i_episode in range(num_episodes):
-        if epsilon > epsilon_min and i_episode > 2000:
+        if epsilon > epsilon_min and i_episode > 600:
             # complete random exploration 500 episodes, 
             # then decrase exploration till epsilon less than epsilon_min
             epsilon *= epsilon_decay
@@ -139,7 +152,7 @@ def q_learning(env, agents, num_episodes, batch_size, epsilon, epsilon_min, epsi
         for t in range(MAX_STEP):
         
             ## Decide action
-            action = act(env, agents, states, epsilon, i_episode)
+            action = act(env, agents, states, epsilon, i_episode,consider_energy)
 
             ## Advance the game to the next frame based on the action
             next_states, rewards, done, _ = env.step(action)
@@ -161,15 +174,8 @@ def q_learning(env, agents, num_episodes, batch_size, epsilon, epsilon_min, epsi
 
             ## make next_state the new current state for the next frame.
             states = next_states
-
-            
-        mean_score = stats.episode_rewards[i_episode]/stats.episode_lengths[i_episode]
-        print("episode: {}/{}, score: {}, e: {:.2}, steps:{}, mean score:{:.2}"
-            .format(i_episode, num_episodes,  stats.episode_rewards[i_episode], epsilon, 
-                stats.episode_lengths[i_episode], 
-                 mean_score))
-        #if(i_episode > 200):
-        write_csv(folder, i_episode, stats.episode_lengths[i_episode], mean_score)
+        # evaluation the performance of the current agent
+        evaluation(env_evaluation, agents, i_episode, num_episodes, consider_energy, folder + "_evaluation" )
         if(i_episode%100 == 0):
             for j in range(env.nO):
                 agents[j].save(folder + "_qn_O" + str(j) + "_" + str(i_episode) + ".h5")   
@@ -177,6 +183,55 @@ def q_learning(env, agents, num_episodes, batch_size, epsilon, epsilon_min, epsi
         agents[j].save(folder + "_qn-final_O" + str(j) + ".h5")           
 
     return stats
+
+
+def evaluation(env, agents, i_episode, num_episodes, consider_energy, folder):
+    states = env.reset()
+    # Keeps track of useful statistics
+    stats = plotting.EpisodeStats(
+        episode_lengths=np.zeros(num_episodes),
+        episode_rewards=np.zeros(num_episodes))
+       
+    for t in range(MAX_STEP):
+        ## Decide action
+        i = 0
+        act_values = []  
+        best_action = []      
+        for agent in agents:
+            state = np.reshape(states[i], [1, env.nS])
+            action_value = agent.predict(state)[0]
+            act_values.append(action_value)
+            best_action.append(np.argmax(action_value))
+            i = i + 1
+        act_values = np.array(act_values)
+
+        # get averaged Q - value
+        act_values = np.average(act_values, axis=0)
+       
+        if consider_energy:
+            # get idex of positive value 
+            top_act_values = act_values.argsort()[-3:][::-1]
+            action = (top_act_values, best_action)
+        action = np.argmax(act_values), best_action
+
+        ## Advance the game to the next frame based on the action
+        next_states, rewards, done, _ = env.step(action)
+
+        env.my_render(folder)
+        stats.episode_rewards[i_episode] += sum(rewards)/env.nO
+        stats.episode_lengths[i_episode] = t+1
+      
+        if done: ## no need to remeber terminal state in this case
+            break
+
+        ## make next_state the new current state for the next frame.
+        states = next_states
+    mean_score = stats.episode_rewards[i_episode]/stats.episode_lengths[i_episode]
+    print("episode: {}/{}, score: {}, steps:{}, mean score:{:.2}"
+        .format(i_episode, num_episodes,  stats.episode_rewards[i_episode], 
+            stats.episode_lengths[i_episode], 
+             mean_score))
+    write_csv(folder, i_episode, stats.episode_lengths[i_episode], mean_score)
 
 
 def write_csv(folder, episode, step_num, average_score):
@@ -187,14 +242,5 @@ def write_csv(folder, episode, step_num, average_score):
             fieldnames[2]:average_score})
 
 
-def evaluation(env, agent, folder):
-    model = agent.load(folder + "_qn-final_O2.h5")
-    for air in np.arange(18,30,0.5):
-        state = skinTemperature().comfPierceSET(air, air-1, 35, 1.0) 
-        print(state)
-        state = env._process_state_DDQN(state)
-        #env._print()
-        state = np.reshape(state, [1, env.nS])
-        target_f = model.predict(state)
-        print(target_f)
-        print(np.argmax(target_f))
+
+

@@ -14,8 +14,8 @@
 !
 ! Location:                Pittsburgh, PA
 !
-! Design Days:             Pittsburgh Allegheny Co Ap_PA_USA Annual Heating 99.6%, MaxDB=-15.4°C
-!                          Pittsburgh Allegheny Co Ap_PA_USA Annual Cooling (DB=>MWB) .4%, MaxDB=32.2°C MWB=22.5°C
+! Design Days:             Pittsburgh Allegheny Co Ap_PA_USA Annual Heating 99.6%, MaxDB=-15.4ï¿½C
+!                          Pittsburgh Allegheny Co Ap_PA_USA Annual Cooling (DB=>MWB) .4%, MaxDB=32.2ï¿½C MWB=22.5ï¿½C
 !
 ! Run Control:             Zone and System sizing with weather file run control (no design days run)
 !
@@ -85,7 +85,7 @@
 ! System Equipment Autosize:      Yes
 ! Purchased Cooling:              None
 ! Purchased Heating:              None
-! Coils:                          COIL:DX:MultiSpeed:CoolingEmpirical, Coil:Heating:Fuel
+! Coils:                          COIL:DX:MultiSpeed:CoolingEmpirical, Coil:Heating:Electric
 ! Pumps:                          None
 ! Boilers:                        None
 ! Chillers:                       None
@@ -181,7 +181,7 @@ SimulationControl,
     No,                      !- Run Simulation for Sizing Periods
     Yes;                     !- Run Simulation for Weather File Run Periods
 
-! Pittsburgh Allegheny Co Ap_PA_USA Annual Heating 99.6%, MaxDB=-15.4°C
+! Pittsburgh Allegheny Co Ap_PA_USA Annual Heating 99.6%, MaxDB=-15.4ï¿½C
 SizingPeriod:DesignDay,
     Pittsburgh Allegheny Co Ap Ann Htg 99.6% Condns DB,  !- Name
     1,                       !- Month
@@ -210,7 +210,7 @@ SizingPeriod:DesignDay,
     ,                        !- ASHRAE Clear Sky Optical Depth for Diffuse Irradiance (taud) {dimensionless}
     0.00;                    !- Sky Clearness
 
-! Pittsburgh Allegheny Co Ap_PA_USA Annual Cooling (DB=>MWB) .4%, MaxDB=32.2°C MWB=22.5°C
+! Pittsburgh Allegheny Co Ap_PA_USA Annual Cooling (DB=>MWB) .4%, MaxDB=32.2ï¿½C MWB=22.5ï¿½C
 SizingPeriod:DesignDay,
     Pittsburgh Allegheny Co Ap Ann Clg .4% Condns DB=>MWB,  !- Name
     7,                       !- Month
@@ -557,15 +557,15 @@ Schedule:Compact,
     Through: 12/31,          !- Field 1
     For: WeekDays SummerDesignDay CustomDay1 CustomDay2,  !- Field 2
     Until: 8:00, 0.05,       !- Field 4
-    Until: 9:00, 0.9,        !- Field 6
-    Until: 10:00, 0.95,      !- Field 8
-    Until: 11:00, 1.00,      !- Field 10
-    Until: 12:00, 0.95,      !- Field 12
-    Until: 13:00, 0.8,       !- Field 14
-    Until: 14:00, 0.9,       !- Field 16
-    Until: 18:00, 1.00,      !- Field 18
-    Until: 19:00, 0.60,      !- Field 20
-    Until: 21:00, 0.20,      !- Field 22
+    Until: 9:00, 0.5,        !- Field 6
+    Until: 10:00, 0.5,      !- Field 8
+    Until: 11:00, 0.5,      !- Field 10
+    Until: 12:00, 0.5,      !- Field 12
+    Until: 13:00, 0.5,       !- Field 14
+    Until: 14:00, 0.5,       !- Field 16
+    Until: 18:00, 0.5,      !- Field 18
+    Until: 19:00, 0.05,      !- Field 20
+    Until: 21:00, 0.05,      !- Field 22
     Until: 24:00, 0.05,      !- Field 24
     For: Weekends WinterDesignDay Holiday,  !- Field 25
     Until: 24:00, 0.05;      !- Field 27
@@ -576,12 +576,12 @@ Schedule:Compact,
     Through: 12/31,          !- Field 1
     For: WeekDays SummerDesignDay CustomDay1 CustomDay2,  !- Field 2
     Until: 8:00, 0.02,       !- Field 4
-    Until: 9:00, 0.4,        !- Field 6
+    Until: 9:00, 0.9,        !- Field 6
     Until: 14:00, 0.9,       !- Field 8
-    Until: 15:00, 0.8,       !- Field 10
-    Until: 16:00, 0.7,       !- Field 12
-    Until: 18:00, 0.5,       !- Field 14
-    Until: 20:00, 0.3,       !- Field 16
+    Until: 15:00, 0.9,       !- Field 10
+    Until: 16:00, 0.9,       !- Field 12
+    Until: 18:00, 0.9,       !- Field 14
+    Until: 20:00, 0.02,       !- Field 16
     Until: 24:00, 0.02,      !- Field 18
     For: Weekends WinterDesignDay Holiday,  !- Field 19
     Until: 24:00, 0.2;       !- Field 21
@@ -2036,7 +2036,7 @@ Schedule:Compact,
     Fraction,                !- Schedule Type Limits Name
     Through: 12/31,          !- Field 1
     For: Weekdays,           !- Field 2
-    Until: 6:00, 0.02,       !- Field 4
+    Until: 8:00, 0.02,       !- Field 4
     Until: 18:00, 1.0,       !- Field 6
     Until: 24:00, 0.02,      !- Field 8
     For: AllOtherDays,       !- Field 9
@@ -2104,13 +2104,13 @@ Schedule:Compact,
     Temperature,             !- Schedule Type Limits Name
     Through: 3/31,           !- Field 1
     For: AllDays,            !- Field 2
-    Until: 24:00, 17.0,      !- Field 4
+    Until: 24:00, 18.0,      !- Field 4
     Through: 9/30,           !- Field 5
     For: AllDays,            !- Field 6
     Until: 24:00, 15.0,      !- Field 8
     Through: 12/31,          !- Field 9
     For: AllDays,            !- Field 10
-    Until: 24:00, 17.0;      !- Field 12
+    Until: 24:00, 18.0;      !- Field 12
 
 ! same as Doe-2 SDL-C4
 Curve:Biquadratic,
@@ -2447,13 +2447,13 @@ AirTerminal:SingleDuct:VAV:Reheat,
     0.1,                     !- Constant Minimum Air Flow Fraction
     ,                        !- Fixed Minimum Air Flow Rate {m3/s}
     ,                        !- Minimum Air Flow Fraction Schedule Name
-    Coil:Heating:Fuel,       !- Reheat Coil Object Type
+    Coil:Heating:Electric,       !- Reheat Coil Object Type
     SPACE1-1 Zone Coil,      !- Reheat Coil Name
     0.0,                     !- Maximum Hot Water or Steam Flow Rate {m3/s}
     0.0,                     !- Minimum Hot Water or Steam Flow Rate {m3/s}
     SPACE1-1 In Node,        !- Air Outlet Node Name
     0.001,                   !- Convergence Tolerance
-    ReverseWithLimits,       !- Damper Heating Action
+    Normal,       !- Damper Heating Action
     0.002032,                !- Maximum Flow per Zone Floor Area During Reheat {m3/s-m2}
     AutoCalculate,           !- Maximum Flow Fraction During Reheat
     ,                        !- Maximum Reheat Air Temperature {C}
@@ -2488,13 +2488,13 @@ AirTerminal:SingleDuct:VAV:Reheat,
     0.1,                     !- Constant Minimum Air Flow Fraction
     ,                        !- Fixed Minimum Air Flow Rate {m3/s}
     ,                        !- Minimum Air Flow Fraction Schedule Name
-    Coil:Heating:Fuel,       !- Reheat Coil Object Type
+    Coil:Heating:Electric,       !- Reheat Coil Object Type
     SPACE2-1 Zone Coil,      !- Reheat Coil Name
     0.0,                     !- Maximum Hot Water or Steam Flow Rate {m3/s}
     0.0,                     !- Minimum Hot Water or Steam Flow Rate {m3/s}
     SPACE2-1 In Node,        !- Air Outlet Node Name
     0.001,                   !- Convergence Tolerance
-    ReverseWithLimits,       !- Damper Heating Action
+    Normal,       !- Damper Heating Action
     0.002032,                !- Maximum Flow per Zone Floor Area During Reheat {m3/s-m2}
     ,                        !- Maximum Flow Fraction During Reheat
     ,                        !- Maximum Reheat Air Temperature {C}
@@ -2510,13 +2510,13 @@ AirTerminal:SingleDuct:VAV:Reheat,
     0.1,                     !- Constant Minimum Air Flow Fraction
     ,                        !- Fixed Minimum Air Flow Rate {m3/s}
     ,                        !- Minimum Air Flow Fraction Schedule Name
-    Coil:Heating:Fuel,       !- Reheat Coil Object Type
+    Coil:Heating:Electric,       !- Reheat Coil Object Type
     SPACE3-1 Zone Coil,      !- Reheat Coil Name
     0.0,                     !- Maximum Hot Water or Steam Flow Rate {m3/s}
     0.0,                     !- Minimum Hot Water or Steam Flow Rate {m3/s}
     SPACE3-1 In Node,        !- Air Outlet Node Name
     0.001,                   !- Convergence Tolerance
-    ReverseWithLimits,       !- Damper Heating Action
+    Normal,       !- Damper Heating Action
     0.002032,                !- Maximum Flow per Zone Floor Area During Reheat {m3/s-m2}
     ,                        !- Maximum Flow Fraction During Reheat
     ,                        !- Maximum Reheat Air Temperature {C}
@@ -2532,13 +2532,13 @@ AirTerminal:SingleDuct:VAV:Reheat,
     0.1,                     !- Constant Minimum Air Flow Fraction
     ,                        !- Fixed Minimum Air Flow Rate {m3/s}
     ,                        !- Minimum Air Flow Fraction Schedule Name
-    Coil:Heating:Fuel,       !- Reheat Coil Object Type
+    Coil:Heating:Electric,       !- Reheat Coil Object Type
     SPACE4-1 Zone Coil,      !- Reheat Coil Name
     0.0,                     !- Maximum Hot Water or Steam Flow Rate {m3/s}
     0.0,                     !- Minimum Hot Water or Steam Flow Rate {m3/s}
     SPACE4-1 In Node,        !- Air Outlet Node Name
     0.001,                   !- Convergence Tolerance
-    ReverseWithLimits,       !- Damper Heating Action
+    Normal,       !- Damper Heating Action
     0.002032,                !- Maximum Flow per Zone Floor Area During Reheat {m3/s-m2}
     ,                        !- Maximum Flow Fraction During Reheat
     ,                        !- Maximum Reheat Air Temperature {C}
@@ -2554,59 +2554,54 @@ AirTerminal:SingleDuct:VAV:Reheat,
     0.1,                     !- Constant Minimum Air Flow Fraction
     ,                        !- Fixed Minimum Air Flow Rate {m3/s}
     ,                        !- Minimum Air Flow Fraction Schedule Name
-    Coil:Heating:Fuel,       !- Reheat Coil Object Type
+    Coil:Heating:Electric,       !- Reheat Coil Object Type
     SPACE5-1 Zone Coil,      !- Reheat Coil Name
     0.0,                     !- Maximum Hot Water or Steam Flow Rate {m3/s}
     0.0,                     !- Minimum Hot Water or Steam Flow Rate {m3/s}
     SPACE5-1 In Node,        !- Air Outlet Node Name
     0.001,                   !- Convergence Tolerance
-    ReverseWithLimits,       !- Damper Heating Action
+    Normal,       !- Damper Heating Action
     0.002032,                !- Maximum Flow per Zone Floor Area During Reheat {m3/s-m2}
     ,                        !- Maximum Flow Fraction During Reheat
     ,                        !- Maximum Reheat Air Temperature {C}
     ZoneMinOARequirements;   !- Design Specification Outdoor Air Object Name
 
-Coil:Heating:Fuel,
+Coil:Heating:Electric,
     SPACE1-1 Zone Coil,      !- Name
     ReheatCoilAvailSched,    !- Availability Schedule Name
-    NaturalGas,              !- Fuel Type
-    0.8,                     !- Burner Efficiency
+    ,                        !- Burner Efficiency
     autosize,                !- Nominal Capacity {W}
     SPACE1-1 Zone Coil Air In Node,  !- Air Inlet Node Name
     SPACE1-1 In Node;        !- Air Outlet Node Name
 
-Coil:Heating:Fuel,
+Coil:Heating:Electric,
     SPACE2-1 Zone Coil,      !- Name
     ReheatCoilAvailSched,    !- Availability Schedule Name
-    NaturalGas,              !- Fuel Type
-    0.8,                     !- Burner Efficiency
+    ,                        !- Burner Efficiency
     autosize,                !- Nominal Capacity {W}
     SPACE2-1 Zone Coil Air In Node,  !- Air Inlet Node Name
     SPACE2-1 In Node;        !- Air Outlet Node Name
 
-Coil:Heating:Fuel,
+Coil:Heating:Electric,
     SPACE3-1 Zone Coil,      !- Name
     ReheatCoilAvailSched,    !- Availability Schedule Name
-    NaturalGas,              !- Fuel Type
-    0.8,                     !- Burner Efficiency
+    ,                        !- Burner Efficiency
     autosize,                !- Nominal Capacity {W}
     SPACE3-1 Zone Coil Air In Node,  !- Air Inlet Node Name
     SPACE3-1 In Node;        !- Air Outlet Node Name
 
-Coil:Heating:Fuel,
+Coil:Heating:Electric,
     SPACE4-1 Zone Coil,      !- Name
     ReheatCoilAvailSched,    !- Availability Schedule Name
-    NaturalGas,              !- Fuel Type
-    0.8,                     !- Burner Efficiency
+    ,                        !- Burner Efficiency
     autosize,                !- Nominal Capacity {W}
     SPACE4-1 Zone Coil Air In Node,  !- Air Inlet Node Name
     SPACE4-1 In Node;        !- Air Outlet Node Name
 
-Coil:Heating:Fuel,
+Coil:Heating:Electric,
     SPACE5-1 Zone Coil,      !- Name
     ReheatCoilAvailSched,    !- Availability Schedule Name
-    NaturalGas,              !- Fuel Type
-    0.8,                     !- Burner Efficiency
+    ,                        !- Burner Efficiency
     autosize,                !- Nominal Capacity {W}
     SPACE5-1 Zone Coil Air In Node,  !- Air Inlet Node Name
     SPACE5-1 In Node;        !- Air Outlet Node Name
@@ -2680,7 +2675,7 @@ Branch,
     DX Cooling Coil System 1,!- Component 2 Name
     Mixed Air Node 1,        !- Component 2 Inlet Node Name
     Main Cooling Coil 1 Outlet Node,  !- Component 2 Outlet Node Name
-    Coil:Heating:Fuel,       !- Component 3 Object Type
+    Coil:Heating:Electric,       !- Component 3 Object Type
     Main Heating Coil 1,     !- Component 3 Name
     Main Cooling Coil 1 Outlet Node,  !- Component 3 Inlet Node Name
     Main Heating Coil 1 Outlet Node,  !- Component 3 Outlet Node Name
@@ -2760,11 +2755,10 @@ OutdoorAir:Node,
     Main Cooling Coil 1 Condenser Node,  !- Name
     -1.0;                    !- Height Above Ground {m}
 
-Coil:Heating:Fuel,
+Coil:Heating:Electric,
     Main heating Coil 1,     !- Name
     ReheatCoilAvailSched,    !- Availability Schedule Name
-    NaturalGas,              !- Fuel Type
-    0.8,                     !- Burner Efficiency
+    ,                     !- Burner Efficiency
     autosize,                !- Nominal Capacity {W}
     Main Cooling Coil 1 Outlet Node,  !- Air Inlet Node Name
     Main Heating Coil 1 Outlet Node,  !- Air Outlet Node Name
@@ -2838,12 +2832,12 @@ ExternalInterface,
 ExternalInterface:Schedule,
     Space1-HtgSetP-RL,       !- Name
     Temperature ,            !- Schedule Type Limits Name
-    21;                      !- Initial Value
+    20;                      !- Initial Value
 
 ExternalInterface:Schedule,
     Space1-ClgSetP-RL,       !- Name
     Temperature ,            !- Schedule Type Limits Name
-    25;                      !- Initial Value
+    40;                      !- Initial Value
 
 Output:Variable,*,Zone Air Temperature,timestep;
 Output:Variable,*,Zone Air Relative Humidity,timestep;
@@ -2853,6 +2847,9 @@ Output:Variable,*,Zone Thermostat Cooling Setpoint Temperature,timestep;
 Output:Variable,*,Zone Thermal Comfort Fanger Model PMV,timestep;
 Output:Variable,*,Zone People Occupant Count,timestep;
 Output:Variable,*,Facility Total HVAC Electric Demand Power,timestep;
+Output:Variable,*,Site Outdoor Air Drybulb Temperature,timestep;
+Output:Variable,*,Site Diffuse Solar Radiation Rate per Area,timestep;
+Output:Variable,*,Heating Coil Electric Power,timestep;
 Output:VariableDictionary,Regular;
 Output:Surfaces:Drawing,dxf;
 
@@ -2862,4 +2859,3 @@ OutputControl:Table:Style,
 
 Output:Table:SummaryReports,
     AllSummary;              !- Report 1 Name
-

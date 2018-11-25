@@ -20,7 +20,7 @@ class skinTemperature():
         pass
 
 
-    def comfPierceSET(self, ta, tr, rh, clo, vel=0.1, met = 1.1, wme = 0, BODYWEIGHT = 69.9, BODYSURFACEAREA = 1.8258):
+    def comfPierceSET(self, ta, rh, tr, clo, met, BODYWEIGHT, BODYHIGHT, vel=0.1, wme = 0):
         """
         Function to find the saturation vapor pressure, used frequently
         throughtout the comfPierceSET function.
@@ -30,6 +30,7 @@ class skinTemperature():
         TempSkin: float, mean skin temperature of a human body
 
         """
+        BODYSURFACEAREA  = 0.203*(BODYHIGHT)**(0.725)*(BODYWEIGHT)**(0.425) #1.8258
         res = None
 
         def findSaturatedVaporPressureTorr(T):
@@ -48,9 +49,9 @@ class skinTemperature():
         CSTR = 0.5
 
         TempSkinNeutral = 33.7  # setpoint (neutral) value for Tsk
-        TempCoreNeutral = 36.49  # setpoint value for Tcr
+        TempCoreNeutral = 36.8  # setpoint value for Tcr
         # setpoint for Tb (.1*TempSkinNeutral + .9*TempCoreNeutral)
-        TempBodyNeutral = 36.49
+        TempBodyNeutral = 36.8
         SkinBloodFlowNeutral = 6.3  # neutral value for SkinBloodFlow
 
         # INITIAL VALUES - start of 1st experiment
@@ -228,7 +229,7 @@ class feedback():
         pass
 
 
-    def comfPMV(self, ta, tr, rh,  clo, met =1.1, vel=0.1, wme = 0):
+    def comfPMV(self, ta, rh, tr, clo, met, wme = 0, vel=0.1):
         """
         ref:https://github.com/CenterForTheBuiltEnvironment/comfort_tool/blob/master/contrib/comfort_models.py
         returns [pmv, ppd]
@@ -308,13 +309,16 @@ class feedback():
         r = []
 
         r.append(pmv)
-        r.append(ppd)
+        if(pmv < 0.5) and (pmv > -0.5):
+            reward = (0.5-abs(pmv))*10 #positive reward
+        else:
+            reward = -abs(pmv)*10 #negative reward
        
-
+        r.append(-ppd)
         return r
 
-#s = skinTemperature()
-# skin, X = s.comfPierceSET(18,18, 50, 0.4)
+# s = skinTemperature()
+# skin= s.comfPierceSET(18,50, 18, 0.1, 0.55, 1.0 )
 # print(skin)
 # print(X)
 #f = feedback()

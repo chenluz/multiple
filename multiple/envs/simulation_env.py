@@ -10,14 +10,17 @@ import eplus_env
 
 # ref: https://github.com/openai/gym/tree/master/gym/envs
 Ta_max = 30
-Ta_min = 18
+Ta_min = 20
 Rh_max = 51
 Rh_min = 50
 Tskin_max = 35.72
 Tskin_min = 29.9
 
 
-CLO = [0.4, 0.7, 1.0]
+CLO = [0.55, 0.7, 0.97]
+MET = [1.0, 1.0, 1.1]
+Weight = [60, 85, 100]
+Height = [1.65, 1.81, 1.81]
 class simulationEnv(gym.Env):
 
 	def __init__(self):
@@ -39,6 +42,8 @@ class simulationEnv(gym.Env):
 		self.vote = feedback()
 		self.Eplusenv = gym.make('Eplus-v0');
 		self.actions  = []
+		self.consider_energy = False
+
 			
 
 	def _step(self, actions):
@@ -59,26 +64,34 @@ class simulationEnv(gym.Env):
 		self.cur_Skin = []
 		self.reward = []
 		self.actions = []
-		# get air temperature and air humidity after action
-		#incr_Ta = action*0.5 - 0.5*int(self.nA/2)
-		action = actions[0]
 		# get the expected seperate setpoint from each agent
 		for a in actions[1]:
 			self.actions.append(self.cur_setpoint  + a - int(self.nA/2))
+			#self.actions.append(self.cur_setpoint  + a*0.5 - 0.5*int(self.nA/2))
+
+		# get air temperature and air humidity after action
+		if self.consider_energy:
+			possible_actions = actions[0]
+			possible_setpoints = [self.cur_setpoint + action - int(self.nA/2) 
+									for action in possible_actions] 
+			# possible_setpoints = [self.cur_setpoint + action*0.5 - 0.5*int(self.nA/2) 
+			# 						for action in possible_actions] 
+			# find the setpoint that is closest to current outdoor
+			self.cur_setpoint = possible_setpoints[np.argmin(np.array([abs(setpoint - self.cur_Taout) for 
+								setpoint in possible_setpoints ]))]
+		else:
+			action = actions[0]
+			incr_Ta = action - int(self.nA/2)
+			#incr_Ta = action*0.5 - 0.5*int(self.nA/2)
+			self.action = action
+			self.cur_setpoint = self.cur_setpoint + incr_Ta
 		
-
-		incr_Ta = action - int(self.nA/2)
-		self.action = action
-		pre_Ta = self.cur_Ta
-		pre_Rh = self.cur_Rh
-
-		self.cur_setpoint = self.cur_setpoint + incr_Ta
+		
 		overflow = False
 		if self.cur_setpoint > Ta_max:
 			self.cur_setpoint = Ta_max
 		elif self.cur_setpoint < Ta_min:
 			self.cur_setpoint = Ta_min
-
 
 		cursimTime, ob, self.is_terminal = self.Eplusenv.step([self.cur_setpoint,40])
 
@@ -87,17 +100,19 @@ class simulationEnv(gym.Env):
 		while ob[6] != 3:
 			if self.is_terminal == True:
 				break
-			cursimTime, ob, self.is_terminal = self.Eplusenv.step([21,40])
+			cursimTime, ob, self.is_terminal = self.Eplusenv.step([20,40])
 
 
 		self.cur_Ta = ob[0]
 		self.cur_Rh = ob[1]
 		self.cur_MRT = ob[2]
+		self.cur_Taout = ob[7]
 
 
 		# get mean skin temperature from PierceSET model if there  occupants
 		for i in range(self.nO):
-			cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_MRT, self.cur_Rh, CLO[i]) 
+			cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_Rh, 
+				self.cur_MRT, CLO[i], MET[i], Weight[i], Height[i]) 
 
 			self.cur_Skin.append(cur_Skin)
 			if self.actions[i] > Ta_max:
@@ -106,10 +121,10 @@ class simulationEnv(gym.Env):
 				self.reward.append(-100)
 			else:
 				# get converted reward after action from PMV model
-				self.reward.append(-1*self.vote.comfPMV(self.cur_Ta, self.cur_Ta, self.cur_Rh, CLO[i])[1])
+				self.reward.append(self.vote.comfPMV(self.cur_Ta, self.cur_Rh, self.cur_MRT, 
+					CLO[i], MET[i])[1])
 
 			state.append(self._process_state_DDQN(cur_Skin))	
-
 		
 		self.avg_reward = sum(self.reward)/self.nO
 
@@ -134,26 +149,25 @@ class simulationEnv(gym.Env):
 
 
 	def _reset(self):
-		self.cur_setpoint = 21
+		self.cur_setpoint = 20
 
 		cursimTime, ob, self.is_terminal = self.Eplusenv.reset()
 			
-
 		cursimTime, ob, self.is_terminal = self.Eplusenv.step([self.cur_setpoint,40])
 		while ob[6] != 3:
 			if self.is_terminal == True:
 				break
 			cursimTime, ob, self.is_terminal = self.Eplusenv.step([self.cur_setpoint,40])
 	
-	
 		self.cur_Ta = ob[0]
 		self.cur_Rh = ob[1]
 		self.cur_MRT = ob[2]
+		self.cur_Taout = ob[7]
 	
-
 		state = []
 		for i in range(self.nO):
-			cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_MRT, self.cur_Rh, CLO[i]) 
+			cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_Rh, 
+				self.cur_MRT, CLO[i], MET[i], Weight[i], Height[i]) 
 			self.cur_Skin.append(cur_Skin)
 			state.append(self._process_state_DDQN(cur_Skin))
 		return state
@@ -166,16 +180,17 @@ class simulationEnv(gym.Env):
 
 	def my_render(self, folder, model='human', close=False):
 	    with open(folder + "_render.csv", 'a', newline='') as csvfile:
-	        fieldnames = ['time', 'simulationTime', 'action', 'setpoint', 'air_temp', 'air_humid', 'MRT', 'setpoint_0', 'setpoint_1',
-	        'setpoint_2', 'skin_temp0', 'skin_temp1', 'skin_temp2', 'reward0', 'reward1', 'reward2', 
-	        'avg_reward', 'is_terminal']
+	        fieldnames = ['time', 'simulationTime', 'action', 'setpoint', 'air_temp', 'air_humid', 'MRT', 
+	  		'setpoint_0', 'setpoint_1','setpoint_2', 'skin_temp0', 'skin_temp1', 
+	        'skin_temp2', 'reward0', 'reward1', 'reward2', 
+	        'avg_reward occupant', 'Outdoor Air', 'is_terminal']
 	        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 	        writer.writerow({fieldnames[0]: datetime.datetime.utcnow(), 
 	        	fieldnames[1]:self.action, 
 	        	fieldnames[2]:self.cur_setpoint,
 				fieldnames[3]:self.cur_Ta, 
 				fieldnames[4]:self.cur_Rh, 
-				fieldnames[5]:self.cur_MRT, 
+				fieldnames[5]:self.cur_MRT,
 				fieldnames[6]:self.actions[0],
 				fieldnames[7]:self.actions[1],
 				fieldnames[8]:self.actions[2],
@@ -186,7 +201,8 @@ class simulationEnv(gym.Env):
 				fieldnames[13]:self.reward[1],
 				fieldnames[14]:self.reward[2],
 				fieldnames[15]:self.avg_reward,
-				fieldnames[16]:self.is_terminal})
+				fieldnames[16]:self.cur_Taout,
+				fieldnames[17]:self.is_terminal})
 
 
 

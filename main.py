@@ -8,7 +8,6 @@ import numpy as np
 import multiple
 import QN.QN as QN
 import DoubleQN.DoubleQN as DoubleQN
-import DoubleQNPER.DoubleQNPER as DoubleQNPER
 from lib import plotting
 import argparse
 import os
@@ -55,16 +54,18 @@ def get_output_folder(parent_dir, env_name):
 def main():  
     parser = argparse.ArgumentParser(description='Run Reinforcment Learning at an Office in Tsinghua University')
     parser.add_argument('--env', default='multiple_control-v0', help='Environment name')
-    parser.add_argument('-o', '--output', default='multiple_QN_Eplus_OneDay', help='Directory to save data to')
-    parser.add_argument('--num', default=500, help='Number of Episodes')
+    parser.add_argument('-o', '--output', default='multiple_QN_Eplus_OneDay_5action_random', help='Directory to save data to')
+    parser.add_argument('--num', default=400, help='Number of Episodes')
     parser.add_argument('--memory', default=2000, help='max size of replay memory')
     parser.add_argument('--gamma', default=0.95, help='Discount Factor')
     parser.add_argument('--alpha', default=0.5, help='Constant step-size parameter')
-    parser.add_argument('--epsilon', default=0.05, help='Epsilon greedy policy')
-    parser.add_argument('--epsilon_min', default=0.011, help='Smallest Epsilon that can get')
+    parser.add_argument('--epsilon', default=1, help='Epsilon greedy policy')
+    parser.add_argument('--epsilon_min', default=0.0105, help='Smallest Epsilon that can get')
     parser.add_argument('--epsilon_decay', default=0.99, help='Epsilon decay after the number of episodes')
     parser.add_argument('--batch_size', default=32, help='Sampling batch size')
     parser.add_argument('--lr', default=0.001, help='Learning rate')
+    # also most change the environment consider_energy to True
+    parser.add_argument('--consider_energy', default=False, help='Whether take energy efficiency as consideration')
 
 
     args = parser.parse_args()
@@ -76,6 +77,7 @@ def main():
     #create environment
     print(args.env)
     env = gym.make(args.env)
+    env_evaluation = gym.make(args.env)
     ############### Q learning with Neural Network approximation and fixed target ################
     state_size = env.nS
     action_size = env.nA
@@ -84,10 +86,12 @@ def main():
     for i in range(occupant_size):
         agents.append(QN.QNAgent(state_size, action_size, float(args.gamma), float(args.lr)))
 
-    stats = QN.q_learning(env, agents, int(args.num), int(args.batch_size),
-        float(args.epsilon), float(args.epsilon_min), float(args.epsilon_decay), output)
+    stats = QN.q_learning(env, env_evaluation, agents, int(args.num), int(args.batch_size),
+       float(args.epsilon), float(args.epsilon_min), float(args.epsilon_decay), args.consider_energy, output)
     plotting.plot_episode_stats(stats, smoothing_window=1)
-    #QN.evaluation(env, agents[0], output)
+    # for i in range(occupant_size):
+    #     agents.append(QN.QNAgent(state_size, action_size, float(args.gamma), float(args.lr), i, output, True))
+    # QN.evaluation(env, agents, args.consider_energy, output + "evaluation")
     ### change the environment to  _process_state_DDQN before use it
 
    
